@@ -87,17 +87,18 @@ void colorWipe(uint32_t c, uint8_t wait) {
 }
 
 void blinkLED() {
+  //movement direction is counter intuitive, but works this way
   if(BT_RIGHT_F == 1) {
-    X_GLOB += 1;
-  }
-  if(BT_LEFT_F == 1) {
     X_GLOB -= 1;
   }
+  if(BT_LEFT_F == 1) {
+    X_GLOB += 1;
+  }
   if(BT_DOWN_F == 1) {
-    Y_GLOB -= 1;
+    Y_GLOB += 1;
   }
   if(BT_UP_F == 1) {
-    Y_GLOB += 1;
+    Y_GLOB -= 1;
   }
   int coordinate = mat2vec(X_GLOB,Y_GLOB);
   if(BT_GREEN_F == 1) {
