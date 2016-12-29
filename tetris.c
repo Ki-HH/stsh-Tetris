@@ -120,26 +120,51 @@ void tetris_display_matrix(struct t_status *s)
 	}
 }
 
-void tetris_inject_new(struct t_status *s)
+void tetris_inject_new(struct t_status *s, int brick_type)
 {
-	int brick_type=0;
 	int x0;
 
 	/* the new brick should be approx horizontally centered */
 	x0 = (status_w-brick_w)/2;
 	s->ms_x0=x0;
 	s->ms_y0=1;
-	s->ms_type=1;
+	s->ms_type=brick_type;
 }
 
 
 
 
-
-int tetris_collission_worker(struct t_status *s)
+void tetris_materialize_moving_stone(struct t_status *s)
 {
 	int b_row,b_col;
 	int row, col;
+	int brick_color;
+
+	/* code stolen from tetris_collision_worker */
+	for(b_row=0; b_row<2; b_row++)
+	{
+		for(b_col=0; b_col<4; b_col++)
+		{
+			row = (-b_row)+s->ms_y0;
+			col = b_col + s->ms_x0;
+
+			brick_color = __stones[s->ms_type][b_col+4*b_row];
+			if(brick_color=='*')
+				brick_color=1;
+			else
+				brick_color=0;
+
+			if(brick_color)
+				s->matrix[xy2ind(col,row)] = 1;
+		}
+	}
+
+}
+int tetris_collision_worker(struct t_status *s)
+{
+	int b_row,b_col;
+	int row, col;
+	int brick_color;
 	int got_collision;
 
 	got_collision=0;
@@ -147,6 +172,13 @@ int tetris_collission_worker(struct t_status *s)
 	{
 		for(b_col=0; b_col<4; b_col++)
 		{
+			/* see this pixel of the brick is actually occupied */
+			brick_color = __stones[s->ms_type][b_col+4*b_row];
+			if(brick_color=='*')
+				brick_color=1;
+			else
+				brick_color=0;
+
 			/*
 			 * The current brick is *not* part of the status
 			 * matrix => need to calculate coordinates of
@@ -154,10 +186,8 @@ int tetris_collission_worker(struct t_status *s)
 			 */
 			row = (-b_row)+s->ms_y0;
 			col = b_col + s->ms_x0;
-			if(s->matrix[xy2ind(col,row)])
-			{
+			if(s->matrix[xy2ind(col,row)] && brick_color)
 				got_collision=1;
-			}
 		}
 	}
 
@@ -187,7 +217,7 @@ int tetris_drop_stone(struct t_status *s)
 
 	/* see if there is a collision when moving one step down,
 	   update coordinates when no collision. */
-	r=tetris_collission_worker(&s_tmp);
+	r=tetris_collision_worker(&s_tmp);
 	if(r==0)
 		s->ms_y0++;
 
@@ -206,9 +236,8 @@ int main(void)
 	s.m_width=status_w;
 	s.m_height=status_h;
 
-	tetris_display_matrix(&s);
 	puts("====");
-	tetris_inject_new(&s);
+	tetris_inject_new(&s,1);
 	puts("====");
 	tetris_display_matrix(&s);
 	puts("====");
@@ -219,6 +248,52 @@ int main(void)
 		r = tetris_drop_stone(&s);
 		printf("\n\n===== %d (status: %d)\n", j, r);
 		tetris_display_matrix(&s);
+		if(r)
+		{
+			tetris_materialize_moving_stone(&s);
+			break;
+		}
+	}
+
+	puts("XXXX");
+	s.ms_type=4;
+	s.ms_y0=7;
+	s.ms_x0--;
+	tetris_display_matrix(&s);
+
+	puts("XXXXXXXXXXXXXXXXXXXX\nXXXXXXXXXXXXXXXXXXXX");
+	for(j=0; j<15; j++)
+	{
+		int r;
+
+		r = tetris_drop_stone(&s);
+		printf("\n\n===== %d (status: %d)\n", j, r);
+		tetris_display_matrix(&s);
+		if(r)
+		{
+			tetris_materialize_moving_stone(&s);
+			break;
+		}
+	}
+
+	puts("XXXX");
+	s.ms_y0=7;
+	s.ms_x0--;
+	tetris_display_matrix(&s);
+
+	puts("XXXXXXXXXXXXXXXXXXXX\nXXXXXXXXXXXXXXXXXXXX");
+	for(j=0; j<15; j++)
+	{
+		int r;
+
+		r = tetris_drop_stone(&s);
+		printf("\n\n===== %d (status: %d)\n", j, r);
+		tetris_display_matrix(&s);
+		if(r)
+		{
+			tetris_materialize_moving_stone(&s);
+			break;
+		}
 	}
 
 
