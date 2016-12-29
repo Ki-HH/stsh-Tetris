@@ -165,3 +165,16 @@ void readoutController() {
   }
 }
 
+//function expects an array of rgb values that goes through columns first
+void renderArray(int r_arr[COLUMNS*ROWS],int g_arr[COLUMNS*ROWS],int b_arr[COLUMNS*ROWS]) {
+  int kk=0;
+  for(int yy=0;yy<ROWS;yy++) {
+    for(int xx=0;xx<COLUMNS;xx++) {
+      int coordinate = mat2vec(xx,yy);
+      strip.setPixelColor(coordinate, strip.Color(r_arr[kk],g_arr[kk],b_arr[kk]));
+    }
+    kk+=1;
+  }
+  strip.show();
+}
+
