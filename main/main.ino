@@ -1,11 +1,15 @@
 #include <Adafruit_NeoPixel.h>
 #include <stdint.h>
+#include "Timer.h"
+
 #ifdef __AVR__
   #include <avr/power.h>
 #endif
 
 //prototypes
 int mat2vec(int x, int y);
+
+Timer t;
 
 #define PIN 6
 
@@ -31,16 +35,16 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(COLUMNS*ROWS, PIN, NEO_GRB + NEO_KHZ
 void setup() {
   // put your setup code here, to run once:
   strip.begin();
-  strip.show(); // Initialize all pixels to 'off'
+  //strip.show(); // Initialize all pixels to 'off'
+
+  //initialize timer event
+  int tickEvent = t.every(2000, blink);
+  //Serial.print("2 second tick started id=");
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  //colorWipe(strip.Color(15, 15, 15), 50);
-
-  int coordinate = mat2vec(5,4);
-  strip.setPixelColor(coordinate, strip.Color(25,25,25));
-  strip.show();
+  t.update();
 }
 
 void colorWipe(uint32_t c, uint8_t wait) {
@@ -49,6 +53,15 @@ void colorWipe(uint32_t c, uint8_t wait) {
     strip.show();
     delay(wait);
   }
+}
+
+void blink() {
+  int coordinate = mat2vec(3,4);
+  strip.setPixelColor(coordinate, strip.Color(25,25,25));
+  strip.show();
+  delay(1000);
+  strip.setPixelColor(coordinate, strip.Color(0,0,0));
+  strip.show();
 }
 
 int mat2vec(int x, int y) {
