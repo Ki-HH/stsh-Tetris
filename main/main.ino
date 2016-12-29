@@ -11,8 +11,18 @@ int mat2vec(int x, int y);
 
 Timer t;
 
+//LED PIN
 #define PIN 6
 
+//Button PINs
+#define BT_GREEN 5
+#define BT_RED 4
+#define BT_UP 3
+#define BT_RIGHT 2
+#define BT_DOWN 9
+#define BT_LEFT 8
+
+//Columns and Rows
 #define COLUMNS 10
 #define RCOLUMNS 9 //determine number of hardware columns
 #define ROWS 10
@@ -20,7 +30,13 @@ Timer t;
 //direction of LED stripe, 0 meaning top to bottom, 1 meaning bottom to top
 uint8_t column_direction[COLUMNS] = {0, 1, 0, 1, 0, 1, 0, 1, 0, 1};
 
-
+//When buttons are pushed, these flags are set to 1
+int BT_GREEN_F = 0;
+int BT_RED_F = 0;
+int BT_UP_F = 0;
+int BT_LEFT_F = 0;
+int BT_RIGHT_F = 0;
+int BT_DOWN_F = 0;
 
 // Parameter 1 = number of pixels in strip
 // Parameter 2 = Arduino pin number (most are valid)
@@ -32,19 +48,34 @@ uint8_t column_direction[COLUMNS] = {0, 1, 0, 1, 0, 1, 0, 1, 0, 1};
 //   NEO_RGBW    Pixels are wired for RGBW bitstream (NeoPixel RGBW products)
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(COLUMNS*ROWS, PIN, NEO_GRB + NEO_KHZ800);
 
+//temporary testing variables
+int X_GLOB = 3;
+int Y_GLOB = 4;
+
 void setup() {
   // put your setup code here, to run once:
   strip.begin();
   //strip.show(); // Initialize all pixels to 'off'
 
   //initialize timer event
-  int tickEvent = t.every(2000, blink);
-  //Serial.print("2 second tick started id=");
+  int tickEvent = t.every(1000, blinkLED);
+
+  //initialize timer event for controller readout
+  int tickEvent_readout = t.every(50, readoutController);
+
+  //define pullup resistors for all buttons to be pushed
+  pinMode(BT_GREEN, INPUT_PULLUP);
+  pinMode(BT_RED, INPUT_PULLUP);
+  pinMode(BT_RIGHT, INPUT_PULLUP);
+  pinMode(BT_LEFT, INPUT_PULLUP);
+  pinMode(BT_UP, INPUT_PULLUP);
+  pinMode(BT_DOWN, INPUT_PULLUP);
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
   t.update();
+  //t2.update();
 }
 
 void colorWipe(uint32_t c, uint8_t wait) {
@@ -55,11 +86,29 @@ void colorWipe(uint32_t c, uint8_t wait) {
   }
 }
 
-void blink() {
-  int coordinate = mat2vec(3,4);
-  strip.setPixelColor(coordinate, strip.Color(25,25,25));
+void blinkLED() {
+  if(BT_RIGHT_F == 1) {
+    X_GLOB += 1;
+  }
+  if(BT_LEFT_F == 1) {
+    X_GLOB -= 1;
+  }
+  if(BT_DOWN_F == 1) {
+    Y_GLOB -= 1;
+  }
+  if(BT_UP_F == 1) {
+    Y_GLOB += 1;
+  }
+  int coordinate = mat2vec(X_GLOB,Y_GLOB);
+  if(BT_GREEN_F == 1) {
+    strip.setPixelColor(coordinate, strip.Color(0,25,0));
+  } else if(BT_RED_F == 1) {
+    strip.setPixelColor(coordinate, strip.Color(25,0,0));
+  } else {
+    strip.setPixelColor(coordinate, strip.Color(25,25,25));
+  }
   strip.show();
-  delay(1000);
+  delay(500);
   strip.setPixelColor(coordinate, strip.Color(0,0,0));
   strip.show();
 }
@@ -74,5 +123,44 @@ int mat2vec(int x, int y) {
     temp_int += (y);
   }
   return temp_int;
+}
+
+// This function reads out the controller pins and sets the global flag variables
+void readoutController() {
+  if(digitalRead(BT_GREEN) == LOW){
+    BT_GREEN_F = 1;
+  } else {
+    BT_GREEN_F = 0;
+  }
+
+  if(digitalRead(BT_RED) == LOW){
+    BT_RED_F = 1;
+  } else {
+    BT_RED_F = 0;
+  }
+
+  if(digitalRead(BT_RIGHT) == LOW){
+    BT_RIGHT_F = 1;
+  } else {
+    BT_RIGHT_F = 0;
+  }
+
+  if(digitalRead(BT_LEFT) == LOW){
+    BT_LEFT_F = 1;
+  } else {
+    BT_LEFT_F = 0;
+  }
+
+  if(digitalRead(BT_UP) == LOW){
+    BT_UP_F = 1;
+  } else {
+    BT_UP_F = 0;
+  }
+
+  if(digitalRead(BT_DOWN) == LOW){
+    BT_DOWN_F = 1;
+  } else {
+    BT_DOWN_F = 0;
+  }
 }
 
